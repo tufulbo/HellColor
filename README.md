@@ -13,7 +13,8 @@ HellColor is a lightweight, unified message formatting and dispatch library for 
 ## Features
 
 - **Multi-Format Parsing**: Automatically parses Legacy codes (`&c`, `§c`), Hex formats (`&#RRGGBB`), and modern MiniMessage formatting (`<gradient>`, `<bold>`, `<red>`).
-- **Channel Prefixes**: Dispatches messages to Titles, Action Bars, Boss Bars, and Advancement Toasts directly from configuration strings without custom code branching.
+- **Channel Prefixes**: Dispatches messages to Titles, Action Bars, Boss Bars, Advancement Toasts, and Sound Effects directly from configuration strings without custom code branching.
+- **Sound Effects**: Plays Adventure/Bukkit sounds via `<sound:SOUND:VOLUME:PITCH:SOURCE>` inline or as standalone prefix.
 - **Italic Reset**: Automatically disables default italic formatting across parsed components for consistent chat and GUI presentation.
 - **Asynchronous Scheduling**: Handles temporary Boss Bar visibility and Toast advancement lifecycle management internally.
 - **Audience Integration**: Native support for Kyori `Audience` and Paper `Player` instances.
@@ -117,6 +118,25 @@ Example:
 <toast:DIAMOND_SWORD:challenge><gold>Achievement Unlocked;;<yellow>Defeated 100 Players
 ```
 
+### 6. Sound Effects
+Plays sound effect to audience. Can be standalone or prefixed/combined with any message or channel.
+
+```text
+<sound:SOUND:VOLUME:PITCH:SOURCE>
+```
+
+- **SOUND**: Bukkit `Sound` enum name (e.g. `ENTITY_PLAYER_LEVELUP`) or Minecraft / Adventure sound key (e.g. `entity.player.levelup`, `minecraft:block.note_block.pling`, `custom:sfx`).
+- **VOLUME**: Sound volume (float, defaults to `1.0`).
+- **PITCH**: Sound pitch (float, defaults to `1.0`).
+- **SOURCE**: Sound source channel: `MASTER` (default), `MUSIC`, `RECORD`, `WEATHER`, `BLOCK`, `HOSTILE`, `NEUTRAL`, `PLAYER`, `AMBIENT`, `VOICE`.
+
+Examples:
+```text
+<sound:entity.player.levelup:1.0:1.0><title:10:40:10><gold>Level Up!;;<gray>You reached level 50
+<sound:BLOCK_NOTE_BLOCK_PLING:1.0:2.0><actionbar><green>+100 Coins
+<sound:ENTITY_EXPERIENCE_ORB_PICKUP:1.0:1.0>
+```
+
 ---
 
 ## Java API Usage
@@ -135,11 +155,12 @@ ColorUtil.send(player, "<actionbar><green>Balance updated: +$500");
 ColorUtil.send(player, "<title:10:30:10><gold>Level Up!;;<gray>You reached level 50");
 ColorUtil.send(player, "<bossbar:YELLOW:10:PROGRESS><yellow>Event ending soon...");
 ColorUtil.send(player, "<toast:NETHER_STAR:challenge><aqua>Quest Complete!;;<gray>Collected all relics");
+ColorUtil.send(player, "<sound:entity.player.levelup:1.0:1.0>&aLevel Up!");
 
 // Bulk sending
 List<String> broadcastLines = List.of(
     "&7=============================",
-    "<gold><bold>SERVER EVENT STARTED",
+    "<sound:ui.button.click:1.0:1.0><gold><bold>SERVER EVENT STARTED",
     "&7============================="
 );
 ColorUtil.send(player, broadcastLines);

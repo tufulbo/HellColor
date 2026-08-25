@@ -5,6 +5,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.bossbar.BossBar;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -39,6 +41,7 @@ public final class ColorUtil {
     private static final Pattern ACTIONBAR_PATTERN = Pattern.compile("^<actionbar(?::[0-9:]+)?>\\s*(.*)$", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     private static final Pattern BOSSBAR_PATTERN = Pattern.compile("^<bossbar(?::([a-zA-Z]+))?(?::(\\d+))?(?::([a-zA-Z0-9_]+))?>\\s*(.*)$", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     private static final Pattern TOAST_PATTERN = Pattern.compile("^<toast(?::([^>]+))?>\\s*(.*)$", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    private static final Pattern SOUND_PATTERN = Pattern.compile("<sound:([^>]+)>", Pattern.CASE_INSENSITIVE);
 
     private static final ScheduledExecutorService SCHEDULER = Executors.newSingleThreadScheduledExecutor(r -> {
         Thread thread = new Thread(r, "HellColor-Scheduler");
@@ -52,6 +55,17 @@ public final class ColorUtil {
     public static void send(Audience audience, String message) {
         if (audience == null || message == null || message.isEmpty()) {
             return;
+        }
+
+        if (message.contains("<sound:") || message.toLowerCase().contains("<sound:")) {
+            Matcher soundMatcher = SOUND_PATTERN.matcher(message);
+            while (soundMatcher.find()) {
+                playSound(audience, soundMatcher.group(1));
+            }
+            message = soundMatcher.replaceAll("").trim();
+            if (message.isEmpty()) {
+                return;
+            }
         }
 
         Matcher actionbarMatcher = ACTIONBAR_PATTERN.matcher(message);
@@ -127,6 +141,10 @@ public final class ColorUtil {
         }
 
         String formatted = message;
+
+        if (formatted.contains("<sound:") || formatted.toLowerCase().contains("<sound:")) {
+            formatted = SOUND_PATTERN.matcher(formatted).replaceAll("").trim();
+        }
 
         if (formatted.startsWith("<title") || formatted.startsWith("<actionbar") || formatted.startsWith("<bossbar") || formatted.startsWith("<toast")) {
             Matcher matcher = TITLE_PATTERN.matcher(formatted);
@@ -336,6 +354,74 @@ public final class ColorUtil {
             return BossBar.Overlay.valueOf(overlayName.toUpperCase());
         } catch (IllegalArgumentException e) {
             return BossBar.Overlay.PROGRESS;
+        }
+    }
+
+    private static void playSound(Audience audience, String params) {
+        if (audience == null || params == null || params.trim().isEmpty()) {
+            return;
+        }
+        String[] parts = params.split(":");
+        String soundName = parts[0].trim();
+        if (soundName.isEmpty()) {
+            return;
+        }
+
+        float volume = 1.0f;
+        float pitch = 1.0f;
+        Sound.Source source = Sound.Source.MASTER;
+
+        if (parts.length > 1 && !parts[1].trim().isEmpty()) {
+            try {
+                volume = Float.parseFloat(parts[1].trim());
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        if (parts.length > 2 && !parts[2].trim().isEmpty()) {
+            try {
+                pitch = Float.parseFloat(parts[2].trim());
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        if (parts.length > 3 && !parts[3].trim().isEmpty()) {
+            source = parseSoundSource(parts[3].trim());
+        }
+
+        Key key = parseSoundKey(soundName);
+        if (key != null) {
+            audience.playSound(Sound.sound(key, source, volume, pitch));
+        }
+    }
+
+    private static Key parseSoundKey(String soundName) {
+        if (soundName == null || soundName.isEmpty()) {
+            return null;
+        }
+        try {
+            org.bukkit.Sound bukkitSound = org.bukkit.Sound.valueOf(soundName.toUpperCase());
+            return bukkitSound.getKey();
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            if (soundName.contains(":")) {
+                String[] parts = soundName.toLowerCase().split(":", 2);
+                return Key.key(parts[0], parts[1]);
+            }
+            return Key.key(Key.MINECRAFT_NAMESPACE, soundName.toLowerCase());
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    private static Sound.Source parseSoundSource(String sourceName) {
+        if (sourceName == null || sourceName.isEmpty()) {
+            return Sound.Source.MASTER;
+        }
+        try {
+            return Sound.Source.valueOf(sourceName.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return Sound.Source.MASTER;
         }
     }
 }
