@@ -43,6 +43,17 @@ public final class ColorUtil {
     private static final Pattern BOSSBAR_PATTERN = Pattern.compile("^<bossbar(?::([a-zA-Z]+))?(?::(\\d+))?(?::([a-zA-Z0-9_]+))?>\\s*(.*)$", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     private static final Pattern TOAST_PATTERN = Pattern.compile("^<toast(?::([^>]+))?>\\s*(.*)$", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     private static final Pattern SOUND_PATTERN = Pattern.compile("<sound:([^>]+)>", Pattern.CASE_INSENSITIVE);
+    private static final Pattern SPACE_BEFORE_COLOR_PATTERN = Pattern.compile(
+            "(\\s+)(<(" +
+            "#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})" +
+            "|(?:color|colour|c):[^>]+" +
+            "|gradient(?::[^>]+)?" +
+            "|rainbow(?::[^>]+)?" +
+            "|transition(?::[^>]+)?" +
+            "|black|dark_blue|dark_green|dark_aqua|dark_red|dark_purple|gold|gray|grey|dark_gray|dark_grey|blue|green|aqua|red|light_purple|yellow|white" +
+            ")>)",
+            Pattern.CASE_INSENSITIVE
+    );
 
     private static final ScheduledExecutorService SCHEDULER = Executors.newSingleThreadScheduledExecutor(r -> {
         Thread thread = new Thread(r, "HellColor-Scheduler");
@@ -229,26 +240,10 @@ public final class ColorUtil {
     }
 
     private static String resetDecorationsOnSpaces(String text) {
-        if (text == null || text.indexOf(' ') == -1) {
+        if (text == null || !text.contains("<")) {
             return text;
         }
-        StringBuilder sb = new StringBuilder(text.length() + 32);
-        boolean inTag = false;
-        for (int i = 0; i < text.length(); i++) {
-            char c = text.charAt(i);
-            if (c == '<') {
-                inTag = true;
-                sb.append(c);
-            } else if (c == '>') {
-                inTag = false;
-                sb.append(c);
-            } else if (c == ' ' && !inTag) {
-                sb.append("<!b><!i><!u><!st><!obf> <!b><!i><!u><!st><!obf>");
-            } else {
-                sb.append(c);
-            }
-        }
-        return sb.toString();
+        return SPACE_BEFORE_COLOR_PATTERN.matcher(text).replaceAll("$1<!b><!i><!u><!st><!obf>$2");
     }
 
     public static List<Component> parse(List<String> messages) {
