@@ -1,7 +1,7 @@
 # HellColor
 
 [![Java](https://img.shields.io/badge/Java-21-ED8B00?style=flat-square&logo=openjdk&logoColor=white)](https://www.oracle.com/java/)
-[![Paper](https://img.shields.io/badge/Paper-1.21.4-1976D2?style=flat-square)](https://papermc.io/)
+[![Paper](https://img.shields.io/badge/Paper-1.20.6-1976D2?style=flat-square)](https://papermc.io/)
 [![Adventure](https://img.shields.io/badge/Kyori%20Adventure-4.25.0-6C5CE7?style=flat-square)](https://github.com/KyoriPowered/adventure)
 [![Build](https://img.shields.io/badge/Build-Passing-2ECC71?style=flat-square)](#)
 [![Version](https://img.shields.io/badge/Version-1.0.0-gray?style=flat-square)](#)
@@ -197,7 +197,7 @@ MiniMessage miniMessage = ColorUtil.getMiniMessage();
 ## Requirements
 
 - **Java**: 21 or higher
-- **Server**: Paper / Purpur 1.21.4+ (or any server platform implementing Kyori Adventure)
+- **Server**: Paper 1.20.6+ (or any server platform implementing Kyori Adventure)
 
 ---
 
