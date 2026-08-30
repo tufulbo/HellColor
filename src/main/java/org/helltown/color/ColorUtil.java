@@ -36,6 +36,7 @@ public final class ColorUtil {
 
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
     private static final Gson GSON = new Gson();
+    private static final Pattern SPIGOT_HEX_PATTERN = Pattern.compile("[§&]x[§&]([0-9a-fA-F])[§&]([0-9a-fA-F])[§&]([0-9a-fA-F])[§&]([0-9a-fA-F])[§&]([0-9a-fA-F])[§&]([0-9a-fA-F])", Pattern.CASE_INSENSITIVE);
     private static final Pattern HEX_PATTERN = Pattern.compile("&#([A-Fa-f0-9]{6})");
     private static final Pattern TITLE_PATTERN = Pattern.compile("^<title(?::(\\d+):(\\d+):(\\d+))?>\\s*(.*)$", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     private static final Pattern ACTIONBAR_PATTERN = Pattern.compile("^<actionbar(?::[0-9:]+)?>\\s*(.*)$", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
@@ -172,6 +173,17 @@ public final class ColorUtil {
             return Component.empty().decoration(TextDecoration.ITALIC, false);
         }
 
+        if (formatted.contains("§x") || formatted.contains("&x") || formatted.contains("§X") || formatted.contains("&X")) {
+            Matcher matcher = SPIGOT_HEX_PATTERN.matcher(formatted);
+            StringBuilder builder = new StringBuilder();
+            while (matcher.find()) {
+                String hex = matcher.group(1) + matcher.group(2) + matcher.group(3) + matcher.group(4) + matcher.group(5) + matcher.group(6);
+                matcher.appendReplacement(builder, "<#" + hex + ">");
+            }
+            matcher.appendTail(builder);
+            formatted = builder.toString();
+        }
+
         if (formatted.contains("&#")) {
             Matcher matcher = HEX_PATTERN.matcher(formatted);
             StringBuilder builder = new StringBuilder();
@@ -185,32 +197,58 @@ public final class ColorUtil {
 
         if (formatted.contains("&") || formatted.contains("§")) {
             formatted = formatted
-                    .replace("&0", "<black>").replace("§0", "<black>")
-                    .replace("&1", "<dark_blue>").replace("§1", "<dark_blue>")
-                    .replace("&2", "<dark_green>").replace("§2", "<dark_green>")
-                    .replace("&3", "<dark_aqua>").replace("§3", "<dark_aqua>")
-                    .replace("&4", "<dark_red>").replace("§4", "<dark_red>")
-                    .replace("&5", "<dark_purple>").replace("§5", "<dark_purple>")
-                    .replace("&6", "<gold>").replace("§6", "<gold>")
-                    .replace("&7", "<gray>").replace("§7", "<gray>")
-                    .replace("&8", "<dark_gray>").replace("§8", "<dark_gray>")
-                    .replace("&9", "<blue>").replace("§9", "<blue>")
-                    .replace("&a", "<green>").replace("§a", "<green>")
-                    .replace("&b", "<aqua>").replace("§b", "<aqua>")
-                    .replace("&c", "<red>").replace("§c", "<red>")
-                    .replace("&d", "<light_purple>").replace("§d", "<light_purple>")
-                    .replace("&e", "<yellow>").replace("§e", "<yellow>")
-                    .replace("&f", "<white>").replace("§f", "<white>")
-                    .replace("&k", "<obfuscated>").replace("§k", "<obfuscated>")
-                    .replace("&l", "<bold>").replace("§l", "<bold>")
-                    .replace("&m", "<strikethrough>").replace("§m", "<strikethrough>")
-                    .replace("&n", "<underlined>").replace("§n", "<underlined>")
-                    .replace("&o", "<italic>").replace("§o", "<italic>")
-                    .replace("&r", "<reset>").replace("§r", "<reset>");
+                    .replace("&0", "<black><!b><!i><!u><!st><!obf>").replace("§0", "<black><!b><!i><!u><!st><!obf>")
+                    .replace("&1", "<dark_blue><!b><!i><!u><!st><!obf>").replace("§1", "<dark_blue><!b><!i><!u><!st><!obf>")
+                    .replace("&2", "<dark_green><!b><!i><!u><!st><!obf>").replace("§2", "<dark_green><!b><!i><!u><!st><!obf>")
+                    .replace("&3", "<dark_aqua><!b><!i><!u><!st><!obf>").replace("§3", "<dark_aqua><!b><!i><!u><!st><!obf>")
+                    .replace("&4", "<dark_red><!b><!i><!u><!st><!obf>").replace("§4", "<dark_red><!b><!i><!u><!st><!obf>")
+                    .replace("&5", "<dark_purple><!b><!i><!u><!st><!obf>").replace("§5", "<dark_purple><!b><!i><!u><!st><!obf>")
+                    .replace("&6", "<gold><!b><!i><!u><!st><!obf>").replace("§6", "<gold><!b><!i><!u><!st><!obf>")
+                    .replace("&7", "<gray><!b><!i><!u><!st><!obf>").replace("§7", "<gray><!b><!i><!u><!st><!obf>")
+                    .replace("&8", "<dark_gray><!b><!i><!u><!st><!obf>").replace("§8", "<dark_gray><!b><!i><!u><!st><!obf>")
+                    .replace("&9", "<blue><!b><!i><!u><!st><!obf>").replace("§9", "<blue><!b><!i><!u><!st><!obf>")
+                    .replace("&a", "<green><!b><!i><!u><!st><!obf>").replace("§a", "<green><!b><!i><!u><!st><!obf>").replace("&A", "<green><!b><!i><!u><!st><!obf>").replace("§A", "<green><!b><!i><!u><!st><!obf>")
+                    .replace("&b", "<aqua><!b><!i><!u><!st><!obf>").replace("§b", "<aqua><!b><!i><!u><!st><!obf>").replace("&B", "<aqua><!b><!i><!u><!st><!obf>").replace("§B", "<aqua><!b><!i><!u><!st><!obf>")
+                    .replace("&c", "<red><!b><!i><!u><!st><!obf>").replace("§c", "<red><!b><!i><!u><!st><!obf>").replace("&C", "<red><!b><!i><!u><!st><!obf>").replace("§C", "<red><!b><!i><!u><!st><!obf>")
+                    .replace("&d", "<light_purple><!b><!i><!u><!st><!obf>").replace("§d", "<light_purple><!b><!i><!u><!st><!obf>").replace("&D", "<light_purple><!b><!i><!u><!st><!obf>").replace("§D", "<light_purple><!b><!i><!u><!st><!obf>")
+                    .replace("&e", "<yellow><!b><!i><!u><!st><!obf>").replace("§e", "<yellow><!b><!i><!u><!st><!obf>").replace("&E", "<yellow><!b><!i><!u><!st><!obf>").replace("§E", "<yellow><!b><!i><!u><!st><!obf>")
+                    .replace("&f", "<white><!b><!i><!u><!st><!obf>").replace("§f", "<white><!b><!i><!u><!st><!obf>").replace("&F", "<white><!b><!i><!u><!st><!obf>").replace("§F", "<white><!b><!i><!u><!st><!obf>")
+                    .replace("&k", "<obfuscated>").replace("§k", "<obfuscated>").replace("&K", "<obfuscated>").replace("§K", "<obfuscated>")
+                    .replace("&l", "<bold>").replace("§l", "<bold>").replace("&L", "<bold>").replace("§L", "<bold>")
+                    .replace("&m", "<strikethrough>").replace("§m", "<strikethrough>").replace("&M", "<strikethrough>").replace("§M", "<strikethrough>")
+                    .replace("&n", "<underlined>").replace("§n", "<underlined>").replace("&N", "<underlined>").replace("§N", "<underlined>")
+                    .replace("&o", "<italic>").replace("§o", "<italic>").replace("&O", "<italic>").replace("§O", "<italic>")
+                    .replace("&r", "<reset>").replace("§r", "<reset>").replace("&R", "<reset>").replace("§R", "<reset>")
+                    .replace("§", "");
         }
+
+        formatted = resetDecorationsOnSpaces(formatted);
 
         Component component = MINI_MESSAGE.deserialize(formatted);
         return Component.empty().decoration(TextDecoration.ITALIC, false).append(component);
+    }
+
+    private static String resetDecorationsOnSpaces(String text) {
+        if (text == null || text.indexOf(' ') == -1) {
+            return text;
+        }
+        StringBuilder sb = new StringBuilder(text.length() + 32);
+        boolean inTag = false;
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (c == '<') {
+                inTag = true;
+                sb.append(c);
+            } else if (c == '>') {
+                inTag = false;
+                sb.append(c);
+            } else if (c == ' ' && !inTag) {
+                sb.append("<!b><!i><!u><!st><!obf> <!b><!i><!u><!st><!obf>");
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 
     public static List<Component> parse(List<String> messages) {
