@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -39,7 +40,7 @@ public final class ColorUtil {
     private static final Pattern SPIGOT_HEX_PATTERN = Pattern.compile("[§&]x[§&]([0-9a-fA-F])[§&]([0-9a-fA-F])[§&]([0-9a-fA-F])[§&]([0-9a-fA-F])[§&]([0-9a-fA-F])[§&]([0-9a-fA-F])", Pattern.CASE_INSENSITIVE);
     private static final Pattern HEX_PATTERN = Pattern.compile("&#([A-Fa-f0-9]{6})");
     private static final Pattern TITLE_PATTERN = Pattern.compile("^<title(?::(\\d+):(\\d+):(\\d+))?>\\s*(.*)$", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    private static final Pattern ACTIONBAR_PATTERN = Pattern.compile("^<actionbar(?::[0-9:]+)?>\\s*(.*)$", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    private static final Pattern ACTIONBAR_PATTERN = Pattern.compile("^<actionbar(?::(\\d+))?(?::(\\d+))?(?::(\\d+))?>\\s*(.*)$", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     private static final Pattern BOSSBAR_PATTERN = Pattern.compile("^<bossbar(?::([a-zA-Z]+))?(?::(\\d+))?(?::([a-zA-Z0-9_]+))?>\\s*(.*)$", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     private static final Pattern TOAST_PATTERN = Pattern.compile("^<toast(?::([^>]+))?>\\s*(.*)$", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     private static final Pattern SOUND_PATTERN = Pattern.compile("<sound:([^>]+)>", Pattern.CASE_INSENSITIVE);
@@ -82,8 +83,43 @@ public final class ColorUtil {
 
         Matcher actionbarMatcher = ACTIONBAR_PATTERN.matcher(message);
         if (actionbarMatcher.matches()) {
-            String content = actionbarMatcher.group(1);
-            audience.sendActionBar(parse(content != null ? content : ""));
+            String p1 = actionbarMatcher.group(1);
+            String p2 = actionbarMatcher.group(2);
+            String p3 = actionbarMatcher.group(3);
+            String content = actionbarMatcher.group(4);
+            Component comp = parse(content != null ? content : "");
+            audience.sendActionBar(comp);
+
+            int totalTicks = 0;
+            if (p1 != null && p2 != null && p3 != null) {
+                totalTicks = Integer.parseInt(p1) + Integer.parseInt(p2) + Integer.parseInt(p3);
+            } else if (p1 != null && p2 != null) {
+                totalTicks = Integer.parseInt(p1) + Integer.parseInt(p2);
+            } else if (p1 != null) {
+                totalTicks = Integer.parseInt(p1);
+            }
+
+            if (totalTicks > 0) {
+                long durationMs = totalTicks * 50L;
+                if (totalTicks > 40) {
+                    long endTime = System.currentTimeMillis() + durationMs;
+                    ScheduledFuture<?>[] holder = new ScheduledFuture<?>[1];
+                    holder[0] = SCHEDULER.scheduleAtFixedRate(() -> {
+                        if (System.currentTimeMillis() >= endTime || (audience instanceof Player player && !player.isOnline())) {
+                            if (holder[0] != null) {
+                                holder[0].cancel(false);
+                            }
+                            return;
+                        }
+                        audience.sendActionBar(comp);
+                    }, 1000, 1000, TimeUnit.MILLISECONDS);
+                }
+                SCHEDULER.schedule(() -> {
+                    if (!(audience instanceof Player player) || player.isOnline()) {
+                        audience.sendActionBar(Component.empty());
+                    }
+                }, durationMs, TimeUnit.MILLISECONDS);
+            }
             return;
         }
 
@@ -165,7 +201,7 @@ public final class ColorUtil {
             } else {
                 matcher = ACTIONBAR_PATTERN.matcher(formatted);
                 if (matcher.matches()) {
-                    formatted = matcher.group(1);
+                    formatted = matcher.group(4);
                 } else {
                     matcher = BOSSBAR_PATTERN.matcher(formatted);
                     if (matcher.matches()) {

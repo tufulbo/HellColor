@@ -67,10 +67,11 @@ Standard text with no prefix renders directly to the audience chat.
 ```
 
 ### 2. Action Bar
-Displays text in the player's action bar.
+Displays text in the player's action bar. Supports optional timing (`<actionbar:duration>` or `<actionbar:fadeIn:stay:fadeOut>`).
 
 ```text
 <actionbar><yellow>You found an item!
+<actionbar:10:40:10><yellow>You found an item!
 ```
 
 ### 3. Titles and Subtitles
